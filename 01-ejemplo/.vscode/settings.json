@@ -1,0 +1,11 @@
+{
+    "cmake.generator": "Ninja Multi-Config",
+    "cmake.buildDirectory": "${workspaceFolder}/build",
+    "cmake.configureSettings": {
+        "CMAKE_C_COMPILER": "C:/Paralela/tools/mingw64/bin/gcc.exe",
+        "CMAKE_CXX_COMPILER": "C:/Paralela/tools/mingw64/bin/g++.exe",
+        "CMAKE_MAKE_PROGRAM": "C:/Paralela/tools/mingw64/bin/ninja.exe",
+        "CMAKE_TOOLCHAIN_FILE": "C:/Paralela/tools/vcpkg-2026.10.16/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-mingw-dynamic"
+    }
+}
