@@ -7,13 +7,14 @@
 
 #include "fractal-serial.h"
 
+
 // Ejes en coordenadas x,y
 double x_min = -1.5;
 double x_max = 1.5;
 double y_min = -1.5;
 double y_max = 1.5;
 
-int max_iteraciones = 100;
+int max_iteraciones = 10;
 
 #define WIDTH 1600
 #define HEIGHT 900
@@ -29,15 +30,22 @@ int main()
     // Create the main window
     sf::RenderWindow window(sf::VideoMode({WIDTH, HEIGHT}), "Dibujo funcion");
 
-    // configurar textos
-    // la fuente de texto debe estar en la misma carpeta que el ejecutable (Debug en este caso)
+    // configurar textos 
+    // configuracion texto Fps e iteraciones
     sf::Font font("arial.TTF");
     sf::Text text(font, "Fractal", 24);
     text.setFillColor(sf::Color::Black);
     text.setPosition({10,10});
     text.setStyle(sf::Text::Bold);
+    
+    //configuracion texto inferior
+    std::string options = "[1] Serial | Up/Down: Iterations";
+    sf::Text text_options(font, options, 20);
+    text_options.setFillColor(sf::Color::Blue);
+    text_options.setPosition({10, window.getView().getSize().y - 40});
+    text.setStyle(sf::Text::Bold);
 
-    // dibujar();
+    // dibujar(); configurar textura inicial
     julia_serial(x_min, y_min, x_max, y_max, WIDTH, HEIGHT, buffer);
 
     // Load a sprite to display
@@ -56,9 +64,23 @@ int main()
         // Process events
         while (const std::optional event = window.pollEvent())
         {
+            // sf::Event::KeyPressed
             // Close window: exit
             if (event->is<sf::Event::Closed>())
                 window.close();
+                else if(event -> is <sf::Event::KeyReleased>()){
+                    auto evt = event -> getIf<sf::Event::KeyReleased>();
+
+                    switch (evt ->scancode){
+                        case sf::Keyboard::Scan::Up:
+                        max_iteraciones += 10;
+                        break;
+                        case sf::Keyboard::Scan::Down:
+                        max_iteraciones -= 10;
+                        break;
+                    }
+
+                }
         }
 
         julia_serial(x_min, y_min, x_max, y_max, WIDTH, HEIGHT, buffer);
@@ -89,7 +111,11 @@ int main()
         // Draw the sprite
         window.draw(sprite);
 
+        //Texto de Fps e iteracciones
         window.draw(text);
+
+        //Dibujar texto de opciones
+        window.draw(text_options);
 
         // Update the window
         window.display();
