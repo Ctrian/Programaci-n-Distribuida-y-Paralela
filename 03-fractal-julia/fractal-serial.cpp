@@ -1,4 +1,5 @@
 #include "fractal-serial.h"
+#include "palette.h"
 
 #include <complex> // libreria para trabajar con numeros complejos
 
@@ -25,7 +26,9 @@ uint32_t acotado(std::complex<double> z0)
     if (iter < max_iteraciones)
     {
         // norma > 2
-        return 0xFFFFFFFF; // ROJO
+        //return 0xFFFFFFFF; // ROJO
+        int index = iter % PALETTE_SIZE;
+        return color_ramp[index];
     }
     // NORMA <= 2
     return 0X000000FF; // BLANCO
