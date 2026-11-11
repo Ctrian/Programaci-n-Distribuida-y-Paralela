@@ -7,6 +7,11 @@
 
 #include "fractal-serial.h"
 
+#include <complex>
+#include <cmath>
+#include <cstring>
+
+#include "fractal-simd.h"
 
 // Ejes en coordenadas x,y
 double x_min = -1.5;
@@ -15,6 +20,7 @@ double y_min = -1.5;
 double y_max = 1.5;
 
 int max_iteraciones = 10;
+extern std::complex<double> c;
 
 #define WIDTH 1600
 #define HEIGHT 900
@@ -22,31 +28,39 @@ int max_iteraciones = 10;
 // imagen, textura
 uint32_t *buffer = nullptr;
 
+enum class runtime_type
+{
+    SERIAL_1,
+    SIMD
+};
+
 int main()
 {
 
     buffer = new uint32_t[WIDTH * HEIGHT];
 
+    runtime_type r_type = runtime_type::SERIAL_1;
+
     // Create the main window
     sf::RenderWindow window(sf::VideoMode({WIDTH, HEIGHT}), "Dibujo funcion");
 
-    // configurar textos 
+    // configurar textos
     // configuracion texto Fps e iteraciones
     sf::Font font("arial.TTF");
     sf::Text text(font, "Fractal", 24);
     text.setFillColor(sf::Color::Black);
-    text.setPosition({10,10});
+    text.setPosition({10, 10});
     text.setStyle(sf::Text::Bold);
-    
-    //configuracion texto inferior
-    std::string options = "[1] Serial | Up/Down: Iterations";
+
+    // configuracion texto inferior
+    std::string options = "[1] Serial |[3] SIMD | Up/Down: Iterations";
     sf::Text text_options(font, options, 20);
     text_options.setFillColor(sf::Color::Blue);
     text_options.setPosition({10, window.getView().getSize().y - 40});
     text.setStyle(sf::Text::Bold);
 
     // dibujar(); configurar textura inicial
-    julia_serial(x_min, y_min, x_max, y_max, WIDTH, HEIGHT, buffer);
+    // julia_serial(x_min, y_min, x_max, y_max, WIDTH, HEIGHT, buffer);
 
     // Load a sprite to display
     sf::Texture texture({WIDTH, HEIGHT});
@@ -68,22 +82,44 @@ int main()
             // Close window: exit
             if (event->is<sf::Event::Closed>())
                 window.close();
-                else if(event -> is <sf::Event::KeyReleased>()){
-                    auto evt = event -> getIf<sf::Event::KeyReleased>();
+            else if (event->is<sf::Event::KeyReleased>())
+            {
+                auto evt = event->getIf<sf::Event::KeyReleased>();
 
-                    switch (evt ->scancode){
-                        case sf::Keyboard::Scan::Up:
-                        max_iteraciones += 10;
-                        break;
-                        case sf::Keyboard::Scan::Down:
-                        max_iteraciones -= 10;
-                        break;
-                    }
-
+                switch (evt->scancode)
+                {
+                case sf::Keyboard::Scan::Up:
+                    max_iteraciones += 10;
+                    break;
+                case sf::Keyboard::Scan::Down:
+                    max_iteraciones -= 10;
+                    break;
+                case sf::Keyboard::Scan::Num1:
+                    r_type = runtime_type::SERIAL_1;
+                    break;
+                case sf::Keyboard::Scan::Num3:
+                    r_type = runtime_type::SIMD;
+                    break;
                 }
+                // poner 0 en la imagen
+                std::memset(buffer, 0, WIDTH * HEIGHT * sizeof(uint32_t));
+            }
         }
+        // diibujar fractal
+        // julia_serial(x_min, y_min, x_max, y_max, WIDTH, HEIGHT, buffer);
 
-        julia_serial(x_min, y_min, x_max, y_max, WIDTH, HEIGHT, buffer);
+        std::string mode = "";
+
+        if (r_type == runtime_type::SERIAL_1)
+        {
+            mode = "Julia SERIAL_1";
+            julia_serial(x_min, y_min, x_max, y_max, WIDTH, HEIGHT, buffer);
+        }
+        else if (r_type == runtime_type::SIMD)
+        {
+            mode = "Julia SIMD";
+            julia_simd(x_min, y_min, x_max, y_max, WIDTH, HEIGHT, buffer);
+        }
         texture.update((const uint8_t *)buffer);
 
         // std::cout<<"dibujando"<<std::endl;
@@ -102,7 +138,8 @@ int main()
         std::cout << "FPS: " << fps << std::endl;
 
         // actualizar los textos
-        auto msg = fmt::format("Fractal: Iteraciones: {} , FPS: {}", max_iteraciones, fps);
+        auto msg = fmt::format("Fractal {} - Iteraciones: {}", mode, max_iteraciones);
+
         text.setString(msg);
 
         // Clear screen
@@ -111,10 +148,10 @@ int main()
         // Draw the sprite
         window.draw(sprite);
 
-        //Texto de Fps e iteracciones
+        // Texto de Fps e iteracciones
         window.draw(text);
 
-        //Dibujar texto de opciones
+        // Dibujar texto de opciones
         window.draw(text_options);
 
         // Update the window

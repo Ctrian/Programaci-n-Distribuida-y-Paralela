@@ -8,7 +8,9 @@ find_package(SFML COMPONENTS Graphics Window System CONFIG REQUIRED)
 add_executable(fractal-julia
 main.cpp
 fractal-serial.cpp
-palette.cpp)
+palette.cpp
+fractal-simd.cpp
+fractal-simd.h)
 
 target_link_libraries(fractal-julia PRIVATE 
     fmt::fmt
